@@ -48,6 +48,7 @@ void ModbusRTU::disconnect()
     if (connected_) {
         modbus_close(ctx_);
         connected_ = false;
+        
     }
 }
 
