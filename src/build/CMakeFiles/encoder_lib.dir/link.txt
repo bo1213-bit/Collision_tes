@@ -1,0 +1,2 @@
+/usr/bin/ar qc libencoder_lib.a  CMakeFiles/encoder_lib.dir/hal/ModbusRTU.cpp.o CMakeFiles/encoder_lib.dir/driver/EncoderDriver.cpp.o CMakeFiles/encoder_lib.dir/Encoder.cpp.o
+/usr/bin/ranlib libencoder_lib.a
