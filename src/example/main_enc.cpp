@@ -212,7 +212,7 @@ int main() {
         bool vel_changed = !osc && std::fabs(ema_vel - last_print_vel) >= 5.0;
         bool acc_changed = !osc && std::fabs(ema_acc - last_print_acc) >= 5.0;
 
-        if (pos_changed || vel_changed || acc_changed || first) {
+        if (pos_changed || first) {
             std::cout << "Pos: " << pos_deg << " deg";
             if (osc) {
                 std::cout << "  Vel: (osc)  Acc: (osc)";
