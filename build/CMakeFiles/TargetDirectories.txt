@@ -1,0 +1,5 @@
+/home/lab/Collision_test/build/CMakeFiles/rebuild_cache.dir
+/home/lab/Collision_test/build/CMakeFiles/encoder_print.dir
+/home/lab/Collision_test/build/CMakeFiles/edit_cache.dir
+/home/lab/Collision_test/build/CMakeFiles/encoder_example.dir
+/home/lab/Collision_test/build/CMakeFiles/encoder_lib.dir

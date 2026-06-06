@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/lab/Collision_test/src/hal/CustomProtocol.cpp
+CustomProtocol.h
+/home/lab/Collision_test/src/hal/CustomProtocol.h
+cerrno
+-
+chrono
+-
+cstring
+-
+iostream
+-
+thread
+-
+
+/home/lab/Collision_test/src/hal/CustomProtocol.h
+SerialPort.h
+/home/lab/Collision_test/src/hal/SerialPort.h
+cstdint
+-
+memory
+-
+vector
+-
+
+/home/lab/Collision_test/src/hal/SerialPort.h
+cstdint
+-
+string
+-
+

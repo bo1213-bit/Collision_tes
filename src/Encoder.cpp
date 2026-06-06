@@ -37,3 +37,8 @@ bool Encoder::read(int64_t& value)
                            : ev.signed_val;
     return true;
 }
+
+uint32_t Encoder::single_turn_resolution() const
+{
+    return drv_->single_turn_resolution();
+}

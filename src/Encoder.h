@@ -42,6 +42,10 @@ public:
     // For multi-turn absolute encoders the value is unsigned and cast to int64_t.
     bool read(int64_t& value);
 
+    // Single-turn resolution: 2^st_bits, i.e. counts per revolution.
+    // Returns 0 if unknown.
+    uint32_t single_turn_resolution() const;
+
 private:
     std::unique_ptr<driver::IEncoderDriver> drv_;
 };

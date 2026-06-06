@@ -23,6 +23,19 @@ public:
 
     // Returns number of registers read, or -1 on error.
     int read_registers(int addr, int count, uint16_t* dest);
+    int read_input_registers(int addr, int count, uint16_t* dest);
+
+    // Write holding registers (fc 06 / fc 16). Returns 1 on success, -1 on error.
+    int write_register(int addr, uint16_t value);
+    int write_registers(int addr, int count, const uint16_t* src);
+
+    // Coils (fc 01 / fc 05 / fc 15) — returns bits read/written, -1 on error.
+    int read_coils(int addr, int count, uint8_t* dest);
+    int write_coil(int addr, int value);
+    int write_coils(int addr, int count, const uint8_t* src);
+
+    // Discrete inputs (fc 02).
+    int read_input_bits(int addr, int count, uint8_t* dest);
 
 private:
     modbus_t*   ctx_;

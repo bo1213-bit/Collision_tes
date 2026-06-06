@@ -34,6 +34,7 @@ public:
     EncoderProtocol protocol()        const { return protocol_; }
     uint16_t        multi_turn_bits() const { return mt_bits_; }
     uint16_t        single_turn_bits() const { return st_bits_; }
+    uint32_t        single_turn_resolution() const override;
 
 private:
     static constexpr int REG_ENC_PROTO = 20;

@@ -65,4 +65,60 @@ int ModbusRTU::read_registers(int addr, int count, uint16_t* dest)
     return modbus_read_registers(ctx_, addr, count, dest);
 }
 
+int ModbusRTU::read_input_registers(int addr, int count, uint16_t* dest)
+{
+    if (!connected_) {
+        return -1;
+    }
+    return modbus_read_input_registers(ctx_, addr, count, dest);
+}
+
+int ModbusRTU::write_register(int addr, uint16_t value)
+{
+    if (!connected_) {
+        return -1;
+    }
+    return modbus_write_register(ctx_, addr, value);
+}
+
+int ModbusRTU::write_registers(int addr, int count, const uint16_t* src)
+{
+    if (!connected_) {
+        return -1;
+    }
+    return modbus_write_registers(ctx_, addr, count, src);
+}
+
+int ModbusRTU::read_coils(int addr, int count, uint8_t* dest)
+{
+    if (!connected_) {
+        return -1;
+    }
+    return modbus_read_bits(ctx_, addr, count, dest);
+}
+
+int ModbusRTU::write_coil(int addr, int value)
+{
+    if (!connected_) {
+        return -1;
+    }
+    return modbus_write_bit(ctx_, addr, value);
+}
+
+int ModbusRTU::write_coils(int addr, int count, const uint8_t* src)
+{
+    if (!connected_) {
+        return -1;
+    }
+    return modbus_write_bits(ctx_, addr, count, src);
+}
+
+int ModbusRTU::read_input_bits(int addr, int count, uint8_t* dest)
+{
+    if (!connected_) {
+        return -1;
+    }
+    return modbus_read_input_bits(ctx_, addr, count, dest);
+}
+
 } // namespace hal

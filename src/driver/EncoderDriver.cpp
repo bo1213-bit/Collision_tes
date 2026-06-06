@@ -20,6 +20,12 @@ EncoderDriver::~EncoderDriver()
     close();
 }
 
+uint32_t EncoderDriver::single_turn_resolution() const
+{
+    if (st_bits_ == 0 || st_bits_ > 31) return 0;
+    return uint32_t(1) << st_bits_;
+}
+
 bool EncoderDriver::open()
 {
     if (open_) {
