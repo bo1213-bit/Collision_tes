@@ -20,6 +20,7 @@
 #include <cmath>
 #include <csignal>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -205,6 +206,14 @@ int main() {
         return 1;
     }
 
+    // 打开 CSV 文件记录加速度和速度数据
+    std::ofstream csv_file("data_output.csv");
+    if (csv_file.is_open()) {
+        csv_file << "timestamp,accel1,velocity1,force\n";
+    } else {
+        std::cerr << "[WARN] Cannot open data_output.csv for writing\n";
+    }
+
     constexpr float adc1_scale = 0.196f;//  0.196f;  
 
     // ---------------------------------------------------------------------
@@ -299,9 +308,16 @@ int main() {
                 if (prev_adc_ts != 0) {
                     float dt_s = (adc_frame.ts_us - prev_adc_ts) / 1.0e6f;
                     velocity1 += accel1 * dt_s;
-
                 }
                 prev_adc_ts = adc_frame.ts_us;
+
+                // 写入 CSV
+                if (csv_file.is_open()) {
+                    csv_file << adc_frame.ts_us << ","
+                             << accel1 << ","
+                             << velocity1 << ","
+                             << force << "\n";
+                }
             }
         }
 

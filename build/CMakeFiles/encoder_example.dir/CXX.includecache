@@ -97,6 +97,8 @@ csignal
 -
 cstdint
 -
+fstream
+-
 iostream
 -
 memory
