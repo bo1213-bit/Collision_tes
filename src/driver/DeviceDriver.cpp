@@ -231,7 +231,8 @@
   bool DeviceDriver::write_adc_ch_enable(uint8_t bitmap) {
     if (!open_) return false;
 
-    if (!proto_->send_command(0x01, &bitmap, 1))
+    uint8_t payload[2] = {0, bitmap};  // ch placeholder, data
+    if (!proto_->send_command(0x01, payload, 2))
         return false;
 
     // 固件收到 cmdId=0x01 后调用 fun_msgSetAdcChState() + fun_getAdcParam(),

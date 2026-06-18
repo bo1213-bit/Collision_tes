@@ -314,12 +314,7 @@ int main() {
                 force          = adc_frame.mv[1] - adc2_offset;
                 accel1         = adc1_val * adc1_scale;
 
-                // 打印 ch2/ch3 到终端
-                std::cout << "ch2=" << adc_frame.mv[2]
-                          << " ch3=" << adc_frame.mv[3]
-                          << " ts=" << adc_frame.ts_us << std::endl;
-
-                // 记录 adc_frame[2]/[3] 每帧的值（立即刷盘）
+                // 记录 CH2/CH3 原始电压值到文件，用于离线分析突变时刻
                 if (edge_file.is_open()) {
                     edge_file << adc_frame.ts_us << ","
                               << adc_frame.mv[2] << ","
