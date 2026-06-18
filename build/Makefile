@@ -111,6 +111,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named check_ch_enable
+
+# Build rule for target.
+check_ch_enable: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 check_ch_enable
+.PHONY : check_ch_enable
+
+# fast build rule for target.
+check_ch_enable/fast:
+	$(MAKE) -f CMakeFiles/check_ch_enable.dir/build.make CMakeFiles/check_ch_enable.dir/build
+.PHONY : check_ch_enable/fast
+
+#=============================================================================
 # Target rules for targets named encoder_print
 
 # Build rule for target.
@@ -392,6 +405,33 @@ hal/SerialPort.cpp.s:
 	$(MAKE) -f CMakeFiles/encoder_lib.dir/build.make CMakeFiles/encoder_lib.dir/hal/SerialPort.cpp.s
 .PHONY : hal/SerialPort.cpp.s
 
+home/lab/Collision_test/check_ch_enable.o: home/lab/Collision_test/check_ch_enable.cpp.o
+
+.PHONY : home/lab/Collision_test/check_ch_enable.o
+
+# target to build an object file
+home/lab/Collision_test/check_ch_enable.cpp.o:
+	$(MAKE) -f CMakeFiles/check_ch_enable.dir/build.make CMakeFiles/check_ch_enable.dir/home/lab/Collision_test/check_ch_enable.cpp.o
+.PHONY : home/lab/Collision_test/check_ch_enable.cpp.o
+
+home/lab/Collision_test/check_ch_enable.i: home/lab/Collision_test/check_ch_enable.cpp.i
+
+.PHONY : home/lab/Collision_test/check_ch_enable.i
+
+# target to preprocess a source file
+home/lab/Collision_test/check_ch_enable.cpp.i:
+	$(MAKE) -f CMakeFiles/check_ch_enable.dir/build.make CMakeFiles/check_ch_enable.dir/home/lab/Collision_test/check_ch_enable.cpp.i
+.PHONY : home/lab/Collision_test/check_ch_enable.cpp.i
+
+home/lab/Collision_test/check_ch_enable.s: home/lab/Collision_test/check_ch_enable.cpp.s
+
+.PHONY : home/lab/Collision_test/check_ch_enable.s
+
+# target to generate assembly for a file
+home/lab/Collision_test/check_ch_enable.cpp.s:
+	$(MAKE) -f CMakeFiles/check_ch_enable.dir/build.make CMakeFiles/check_ch_enable.dir/home/lab/Collision_test/check_ch_enable.cpp.s
+.PHONY : home/lab/Collision_test/check_ch_enable.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -399,6 +439,7 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
+	@echo "... check_ch_enable"
 	@echo "... encoder_print"
 	@echo "... edit_cache"
 	@echo "... encoder_example"
@@ -430,6 +471,9 @@ help:
 	@echo "... hal/SerialPort.o"
 	@echo "... hal/SerialPort.i"
 	@echo "... hal/SerialPort.s"
+	@echo "... home/lab/Collision_test/check_ch_enable.o"
+	@echo "... home/lab/Collision_test/check_ch_enable.i"
+	@echo "... home/lab/Collision_test/check_ch_enable.s"
 .PHONY : help
 
 

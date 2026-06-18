@@ -48,6 +48,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
+  "CMakeFiles/check_ch_enable.dir/DependInfo.cmake"
   "CMakeFiles/encoder_print.dir/DependInfo.cmake"
   "CMakeFiles/encoder_example.dir/DependInfo.cmake"
   "CMakeFiles/encoder_lib.dir/DependInfo.cmake"

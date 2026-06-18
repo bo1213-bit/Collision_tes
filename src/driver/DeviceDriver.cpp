@@ -228,7 +228,36 @@
   bool DeviceDriver::write_pwm_ch(uint16_t, const DevicePWMChannel&) { return false; }
   bool DeviceDriver::write_dout(uint16_t, bool)                 { return false; }
   bool DeviceDriver::write_pwm_enable(uint16_t, bool)           { return false; }
-  bool DeviceDriver::write_adc_ch_enable(uint8_t)               { return false; }
+  bool DeviceDriver::write_adc_ch_enable(uint8_t bitmap) {
+    if (!open_) return false;
+
+    if (!proto_->send_command(0x01, &bitmap, 1))
+        return false;
+
+    // 固件收到 cmdId=0x01 后调用 fun_msgSetAdcChState() + fun_getAdcParam(),
+    // 返回的响应 cmdId=0x02, payload 第一个字节是 adc_ch_Enable
+    uint8_t buf[64];
+    int n = proto_->recv_response(0x02, buf, sizeof(buf), 500);
+    if (n <= 0) {
+        std::cerr << "[WARN] write_adc_ch_enable: no response from device\n";
+        return false;
+    }
+
+    // msgAdcWaveState payload: [0]=adc_ch_Enable, [1]=adcSignalType, [2]=adcRange, ...
+    uint8_t actual = buf[0];
+    if (actual != bitmap) {
+        std::cerr << "[WARN] write_adc_ch_enable: device rejected write. "
+                  << "requested=0x" << std::hex << static_cast<int>(bitmap)
+                  << " actual=0x" << static_cast<int>(actual)
+                  << " (device may not be in Stop mode)\n" << std::dec;
+        return false;
+    }
+
+    std::cerr << "[INFO] write_adc_ch_enable: 0x"
+              << std::hex << static_cast<int>(bitmap) << " written OK\n"
+              << std::dec;
+    return true;
+}
   bool DeviceDriver::write_adc_range(uint8_t)                   { return false; }
   bool DeviceDriver::read_calib(int32_t (&)[8], int32_t (&)[8]) { return false; }
   bool DeviceDriver::write_calib(const int32_t (&)[8], const int32_t (&)[8]) { return false; }

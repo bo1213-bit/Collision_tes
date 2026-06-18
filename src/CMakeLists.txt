@@ -31,3 +31,6 @@ target_link_libraries(encoder_example PRIVATE encoder_lib Threads::Threads)
 
 add_executable(encoder_print example/main_enc.cpp)
 target_link_libraries(encoder_print PRIVATE encoder_lib Threads::Threads)
+
+add_executable(check_ch_enable ${CMAKE_SOURCE_DIR}/../check_ch_enable.cpp)
+target_link_libraries(check_ch_enable PRIVATE encoder_lib Threads::Threads)

@@ -53,6 +53,7 @@ CMAKE_BINARY_DIR = /home/lab/Collision_test/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
+all: CMakeFiles/check_ch_enable.dir/all
 all: CMakeFiles/encoder_print.dir/all
 all: CMakeFiles/encoder_example.dir/all
 all: CMakeFiles/encoder_lib.dir/all
@@ -65,11 +66,39 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/check_ch_enable.dir/clean
 clean: CMakeFiles/encoder_print.dir/clean
 clean: CMakeFiles/encoder_example.dir/clean
 clean: CMakeFiles/encoder_lib.dir/clean
 
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/check_ch_enable.dir
+
+# All Build rule for target.
+CMakeFiles/check_ch_enable.dir/all: CMakeFiles/encoder_lib.dir/all
+	$(MAKE) -f CMakeFiles/check_ch_enable.dir/build.make CMakeFiles/check_ch_enable.dir/depend
+	$(MAKE) -f CMakeFiles/check_ch_enable.dir/build.make CMakeFiles/check_ch_enable.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lab/Collision_test/build/CMakeFiles --progress-num=1,2 "Built target check_ch_enable"
+.PHONY : CMakeFiles/check_ch_enable.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/check_ch_enable.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lab/Collision_test/build/CMakeFiles 10
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/check_ch_enable.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lab/Collision_test/build/CMakeFiles 0
+.PHONY : CMakeFiles/check_ch_enable.dir/rule
+
+# Convenience name for target.
+check_ch_enable: CMakeFiles/check_ch_enable.dir/rule
+
+.PHONY : check_ch_enable
+
+# clean rule for target.
+CMakeFiles/check_ch_enable.dir/clean:
+	$(MAKE) -f CMakeFiles/check_ch_enable.dir/build.make CMakeFiles/check_ch_enable.dir/clean
+.PHONY : CMakeFiles/check_ch_enable.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/encoder_print.dir
@@ -78,7 +107,7 @@ clean: CMakeFiles/encoder_lib.dir/clean
 CMakeFiles/encoder_print.dir/all: CMakeFiles/encoder_lib.dir/all
 	$(MAKE) -f CMakeFiles/encoder_print.dir/build.make CMakeFiles/encoder_print.dir/depend
 	$(MAKE) -f CMakeFiles/encoder_print.dir/build.make CMakeFiles/encoder_print.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lab/Collision_test/build/CMakeFiles --progress-num=11,12 "Built target encoder_print"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lab/Collision_test/build/CMakeFiles --progress-num=13,14 "Built target encoder_print"
 .PHONY : CMakeFiles/encoder_print.dir/all
 
 # Build rule for subdir invocation for target.
@@ -105,7 +134,7 @@ CMakeFiles/encoder_print.dir/clean:
 CMakeFiles/encoder_example.dir/all: CMakeFiles/encoder_lib.dir/all
 	$(MAKE) -f CMakeFiles/encoder_example.dir/build.make CMakeFiles/encoder_example.dir/depend
 	$(MAKE) -f CMakeFiles/encoder_example.dir/build.make CMakeFiles/encoder_example.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lab/Collision_test/build/CMakeFiles --progress-num=1,2 "Built target encoder_example"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lab/Collision_test/build/CMakeFiles --progress-num=3,4 "Built target encoder_example"
 .PHONY : CMakeFiles/encoder_example.dir/all
 
 # Build rule for subdir invocation for target.
@@ -132,7 +161,7 @@ CMakeFiles/encoder_example.dir/clean:
 CMakeFiles/encoder_lib.dir/all:
 	$(MAKE) -f CMakeFiles/encoder_lib.dir/build.make CMakeFiles/encoder_lib.dir/depend
 	$(MAKE) -f CMakeFiles/encoder_lib.dir/build.make CMakeFiles/encoder_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lab/Collision_test/build/CMakeFiles --progress-num=3,4,5,6,7,8,9,10 "Built target encoder_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/lab/Collision_test/build/CMakeFiles --progress-num=5,6,7,8,9,10,11,12 "Built target encoder_lib"
 .PHONY : CMakeFiles/encoder_lib.dir/all
 
 # Build rule for subdir invocation for target.

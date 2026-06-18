@@ -52,6 +52,9 @@ public:
     bool read_peak(int ch, float& mv);
     bool read_valley(int ch, float& mv);
 
+    // Access the underlying driver for config (e.g., set channel enable).
+    driver::IDeviceDriver* drv() { return drv_.get(); }
+
 private:
     std::unique_ptr<driver::IDeviceDriver> drv_;
 };

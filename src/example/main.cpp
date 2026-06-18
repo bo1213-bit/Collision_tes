@@ -214,7 +214,7 @@ int main() {
         std::cerr << "[WARN] Cannot open data_output.csv for writing\n";
     }
 
-    constexpr float adc1_scale = 0.196f;//  0.196f;  
+    constexpr float adc1_scale = 0.2f;//  0.196f;  
 
     // ---------------------------------------------------------------------
     // 共享状态:队列 + 用于"发布最新加速度"的原子变量
@@ -233,6 +233,9 @@ int main() {
     float adc2_offset = 0.0f;
 
     if (sensor_ok) {
+        // 初始化时开启 CH2 和 CH3 通道
+        sensor->drv()->write_adc_ch_enable(0x0F);  // CH0+CH1+CH2+CH3
+
         std::cout << "Calibrating offsets via read_all (2s)...\n";
         auto calib_start = std::chrono::steady_clock::now();
         float sum1 = 0.0f, sum2 = 0.0f;
@@ -281,6 +284,12 @@ int main() {
     float  velocity1      = 0.0f;          // ADC1 积分得到的速度
     int64_t prev_adc_ts  = 0;              // 上一次 ADC 采样的时间戳(微秒)
 
+    // 记录 adc_frame[2]/[3] 的原始值到 edge_times.csv
+    std::ofstream edge_file("/home/lab/Collision_test/edge_times.csv");
+    if (edge_file.is_open()) {
+        edge_file << "ts_us,ch2_mv,ch3_mv" << std::endl;
+    }
+
     int loop_cnt = 0;
     while (g_running) {
         // // 心跳: 每秒打印一次,确认主循环还在跑
@@ -305,6 +314,18 @@ int main() {
                 force          = adc_frame.mv[1] - adc2_offset;
                 accel1         = adc1_val * adc1_scale;
 
+                // 打印 ch2/ch3 到终端
+                std::cout << "ch2=" << adc_frame.mv[2]
+                          << " ch3=" << adc_frame.mv[3]
+                          << " ts=" << adc_frame.ts_us << std::endl;
+
+                // 记录 adc_frame[2]/[3] 每帧的值（立即刷盘）
+                if (edge_file.is_open()) {
+                    edge_file << adc_frame.ts_us << ","
+                              << adc_frame.mv[2] << ","
+                              << adc_frame.mv[3] << std::endl;
+                }
+
                 if (prev_adc_ts != 0) {
                     float dt_s = (adc_frame.ts_us - prev_adc_ts) / 1.0e6f;
                     velocity1 += accel1 * dt_s;
@@ -327,6 +348,7 @@ int main() {
         double enc_acc       = latest_enc_acc.load(std::memory_order_relaxed);
 
         // --- c) 同一帧数据，按变化阈值去重后打印在一行 ---
+#if 0
         if (sensor_ok && has_adc)
         {
             bool adc1_changed = std::fabs(adc_frame.mv[0] - last_adc1) >= 0.5f;
@@ -338,11 +360,13 @@ int main() {
             if (adc1_changed || adc2_changed)
             {
                 std::cout << "ADC1 速度: " <<velocity1 << " m/s"
-                        << "ADC1 加速度: " <<accel1 << " m/s²"
+                        << "ADC1 加速度: " << accel1 << " m/s²"
                           << "  力: " << force << " N"
                           << "  时间" << adc_frame.ts_us << "\n";
             }
+
         }
+#endif
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
