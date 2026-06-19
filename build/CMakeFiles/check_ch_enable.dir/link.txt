@@ -1,1 +1,1 @@
-/usr/bin/ccache  g++     CMakeFiles/check_ch_enable.dir/home/lab/Collision_test/check_ch_enable.cpp.o  -o check_ch_enable  libencoder_lib.a -lmodbus -lpthread 
+/usr/bin/ccache  g++  -O3 -DNDEBUG   CMakeFiles/check_ch_enable.dir/home/lab/Collision_test/check_ch_enable.cpp.o  -o check_ch_enable  libencoder_lib.a -lmodbus -lpthread 

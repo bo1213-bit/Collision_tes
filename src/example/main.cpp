@@ -6,6 +6,7 @@
 //   2. 编码器额外开一个处理线程,跑 Savitzky-Golay 算加速度,结果放原子变量
 //   3. main 主循环不再直接读硬件,只从队列/原子变量"消费"最新数据
 //   4. 队列用 BoundedQueue(满了丢最旧),所以慢消费永远不会阻塞快采集
+//   5. adc_thread 绑定到独立 CPU 核心,避免被其他线程/中断抢占
 // ============================================================================
 
 #include "BoundedQueue.h"
@@ -20,10 +21,28 @@
 #include <cmath>
 #include <csignal>
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <pthread.h>
+
+// ---------------------------------------------------------------------------
+// CPU 亲和性工具: 把当前线程绑定到指定核心
+// ---------------------------------------------------------------------------
+static bool pin_to_core(int cpu_id) {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(cpu_id, &cpuset);
+    int rc = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+    if (rc != 0) {
+        std::cerr << "[WARN] pin_to_core(" << cpu_id << ") failed: "
+                  << std::strerror(rc) << "\n";
+        return false;
+    }
+    return true;
+}
 
 // ---------------------------------------------------------------------------
 // 队列里塞的"一帧数据"。带上时间戳,后面如果要做时间对齐就靠它。
@@ -71,16 +90,17 @@ static void encoder_thread(Encoder* enc, BoundedQueue<EncFrame>* q) {
 
 // ---------------------------------------------------------------------------
 // 采集线程 2:ADC 传感器 —— 轮询模式（cmdId=0x08 请求-响应）
-//   循环职责:sensor->read_all() → 打时间戳 → push 进队列 → sleep 1ms
+//   绑定到独立 CPU 核心,全速轮询,不 sleep —— 由 select IO 自然限速
 // ---------------------------------------------------------------------------
-static void adc_thread(Sensor* sensor, BoundedQueue<AdcFrame>* q) {
+static void adc_thread(Sensor* sensor, BoundedQueue<AdcFrame>* q, int cpu_id = -1) {
+    if (cpu_id >= 0) pin_to_core(cpu_id);
     while (g_running) {
         AdcFrame f;
         if (sensor->read_all(f.mv)) {
             f.ts_us = now_us();
             q->push_drop_oldest(std::move(f));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // 去掉 sleep: 由 recv_response 的 select() 进行自然阻塞
     }
 }
 
@@ -220,8 +240,8 @@ int main() {
     // 共享状态:队列 + 用于"发布最新加速度"的原子变量
     // (提前声明,校准阶段也需要用 adc_q)
     // ---------------------------------------------------------------------
-    BoundedQueue<EncFrame> enc_q(32);
-    BoundedQueue<AdcFrame> adc_q(32);
+    BoundedQueue<EncFrame> enc_q(128);
+    BoundedQueue<AdcFrame> adc_q(128);
 
     std::atomic<double> latest_enc_acc{0.0};
     std::atomic<bool>   latest_enc_acc_ready{false};
@@ -262,7 +282,15 @@ int main() {
 
     // ---------------------------------------------------------------------
     // 启动所有后台线程
+    //   adc_thread 绑定到 CPU 核心 2（采集专用）
+    //   main       绑定到 CPU 核心 3（消费专用）
+    //   两个核心通过 BoundedQueue 通信，避免缓存行竞争
     // ---------------------------------------------------------------------
+    constexpr int ADC_CPU = 2;  // ADC 采集线程跑在 core 2
+    constexpr int MAIN_CPU = 3; // main 消费循环跑在 core 3
+
+    pin_to_core(MAIN_CPU);  // 把 main 线程也绑定到专用核心
+
     std::thread t_enc_read, t_enc_proc, t_adc_read;
     if (enc_ok) {
         t_enc_read = std::thread(encoder_thread, enc.get(), &enc_q);
@@ -271,16 +299,12 @@ int main() {
                                  &latest_enc_acc, &latest_enc_acc_ready);
     }
     if (sensor_ok) {
-        t_adc_read = std::thread(adc_thread, sensor.get(), &adc_q);
+        t_adc_read = std::thread(adc_thread, sensor.get(), &adc_q, ADC_CPU);
     }
 
     // ---------------------------------------------------------------------
     // 主消费循环:不再亲自读硬件,只"看队列 + 看原子变量",按原逻辑打印
     // ---------------------------------------------------------------------
-    float  last_adc1     = adc1_offset;
-    float  last_adc2     = adc2_offset;
-    double last_enc_acc  = 0.0;
-    bool   had_enc_acc   = false;  // 第一次拿到加速度时强制打印一次
     float  velocity1      = 0.0f;          // ADC1 积分得到的速度
     int64_t prev_adc_ts  = 0;              // 上一次 ADC 采样的时间戳(微秒)
 
@@ -292,91 +316,56 @@ int main() {
 
     int loop_cnt = 0;
     while (g_running) {
-        // // 心跳: 每秒打印一次,确认主循环还在跑
-        // if (++loop_cnt % 1000 == 0) {
-        //     std::cerr << "[DBG] main loop alive, enc_q=" << enc_q.size()
-        //               << " adc_q=" << adc_q.size()
-        //               << " drops(e=" << enc_q.drop_count()
-        //               << " a=" << adc_q.drop_count() << ")\n";
-        // }
-
-        // --- a) 排空所有积压 ADC 帧，逐帧积分，只保留最后一帧用于打印 ---
+        // --- a) 从 ADC 队列取数据: 队列空时阻塞等待,不空时立即返回 ---
         AdcFrame adc_frame;
         bool has_adc = false;
         float accel1 = 0.0f;
         float force  = 0.0f;
 
         if (sensor_ok) {
-            while (adc_q.pop_wait(adc_frame, std::chrono::milliseconds(0))) {
-                has_adc = true;
+            // 第一帧阻塞等待,后续帧非阻塞排空
+            if (adc_q.pop_wait(adc_frame, std::chrono::milliseconds(500))) {
+                do {
+                    has_adc = true;
 
-                float adc1_val = adc_frame.mv[0] - adc1_offset;
-                force          = adc_frame.mv[1] - adc2_offset;
-                accel1         = adc1_val * adc1_scale;
+                    float adc1_val = adc_frame.mv[0] - adc1_offset;
+                    force          = adc_frame.mv[1] - adc2_offset;
+                    accel1         = adc1_val * adc1_scale;
 
-                // 记录 CH2/CH3 原始电压值到文件，用于离线分析突变时刻
-                if (edge_file.is_open()) {
-                    edge_file << adc_frame.ts_us << ","
-                              << adc_frame.mv[2] << ","
-                              << adc_frame.mv[3] << std::endl;
-                }
+                    // 记录 CH2/CH3 原始电压值到文件，用于离线分析突变时刻
+                    if (edge_file.is_open()) {
+                        edge_file << adc_frame.ts_us << ","
+                                  << adc_frame.mv[2] << ","
+                                  << adc_frame.mv[3] << "\n";
+                    }
 
-                if (prev_adc_ts != 0) {
-                    float dt_s = (adc_frame.ts_us - prev_adc_ts) / 1.0e6f;
-                    velocity1 += accel1 * dt_s;
-                }
-                prev_adc_ts = adc_frame.ts_us;
+                    // 打印 mv[2] 和时间戳，用于观察采样频率（用 \n 避免 flush 阻塞）
+                    std::cout << adc_frame.ts_us << "  ch2=" << adc_frame.mv[2] << "mV\n";
 
-                // 写入 CSV
-                if (csv_file.is_open()) {
-                    csv_file << adc_frame.ts_us << ","
-                             << accel1 << ","
-                             << velocity1 << ","
-                             << force << "\n";
-                }
+                    if (prev_adc_ts != 0) {
+                        float dt_s = (adc_frame.ts_us - prev_adc_ts) / 1.0e6f;
+                        velocity1 += accel1 * dt_s;
+                    }
+                    prev_adc_ts = adc_frame.ts_us;
+
+                    // 写入 CSV
+                    if (csv_file.is_open()) {
+                        csv_file << adc_frame.ts_us << ","
+                                 << accel1 << ","
+                                 << velocity1 << ","
+                                 << force << "\n";
+                    }
+                } while (adc_q.pop_wait(adc_frame, std::chrono::milliseconds(0)));
             }
         }
 
 
-        // --- b) 非阻塞读取处理线程"发布"的最新编码器加速度 ---
+        // --- b) 读取编码器加速度（原子变量，无锁） ---
         bool   enc_acc_ready = latest_enc_acc_ready.load(std::memory_order_acquire);
         double enc_acc       = latest_enc_acc.load(std::memory_order_relaxed);
-
-        // --- c) 同一帧数据，按变化阈值去重后打印在一行 ---
-#if 0
-        if (sensor_ok && has_adc)
-        {
-            bool adc1_changed = std::fabs(adc_frame.mv[0] - last_adc1) >= 0.5f;
-            bool adc2_changed = std::fabs(adc_frame.mv[1] - last_adc2) >= 1.0f;
-
-            if (adc1_changed) last_adc1 = adc_frame.mv[0];
-            if (adc2_changed) last_adc2 = adc_frame.mv[1];
-
-            if (adc1_changed || adc2_changed)
-            {
-                std::cout << "ADC1 速度: " <<velocity1 << " m/s"
-                        << "ADC1 加速度: " << accel1 << " m/s²"
-                          << "  力: " << force << " N"
-                          << "  时间" << adc_frame.ts_us << "\n";
-            }
-
-        }
-#endif
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        (void)enc_acc_ready; (void)enc_acc;
     }
 
-
-      // if (enc_q.size() > 0) {
-      // std::cerr << "[ERROR] " << enc_q.size()
-      //           << " encoder frame(s) left in queue at exit (never consumed)\n";
-  // }
-  // if (adc_q.size() > 0) {
-  //     std::cerr << "[ERROR] " << adc_q.size()
-  //               << " ADC frame(s) left in queue at exit (never consumed)\n";
-  // }
-  // std::cerr << "[INFO] Total drops: enc=" << enc_q.drop_count()
-  //           << ", adc=" << adc_q.drop_count() << "\n";
     // ---------------------------------------------------------------------
     // 关闭:先 shutdown 队列让阻塞中的 pop_wait 立刻返回,再 join 所有线程
     // ---------------------------------------------------------------------

@@ -1,1 +1,1 @@
-/usr/bin/ccache  g++     CMakeFiles/encoder_example.dir/example/main.cpp.o  -o encoder_example  libencoder_lib.a -lmodbus -lpthread 
+/usr/bin/ccache  g++  -O3 -DNDEBUG   CMakeFiles/encoder_example.dir/example/main.cpp.o  -o encoder_example  libencoder_lib.a -lmodbus -lpthread 

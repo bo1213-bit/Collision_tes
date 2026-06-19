@@ -97,6 +97,8 @@ csignal
 -
 cstdint
 -
+cstring
+-
 fstream
 -
 iostream
@@ -104,6 +106,8 @@ iostream
 memory
 -
 thread
+-
+pthread.h
 -
 
 /home/lab/Collision_test/src/hal/CustomProtocol.h
